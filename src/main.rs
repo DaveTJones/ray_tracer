@@ -1,13 +1,19 @@
 #![allow(dead_code, unused_variables)]
 pub mod color;
 pub mod hittable;
+pub mod hittable_list;
+pub mod interval;
 pub mod ray;
 pub mod sphere;
 pub mod vec3;
 
 use color::Color;
+use hittable::HitRecord;
+use hittable_list::HittableList;
 use indicatif::{ProgressBar, ProgressStyle};
+use interval::Interval;
 use ray::Ray;
+use sphere::Sphere;
 use std::error::Error;
 use std::{fs::File, io::Write};
 use vec3::{Point3, Vec3};
@@ -19,10 +25,16 @@ fn write_image() -> Result<(), Box<dyn Error>> {
 
     let aspect_ratio: f64 = 16.0 / 9.0;
 
-    let image_width = 400.;
+    let image_width = 4000.;
 
     // Calculate the image height, and ensure that it's at least 1.
     let image_height = (image_width / aspect_ratio).floor().max(1.);
+
+    // World
+
+    let mut world = HittableList::default();
+    world.add(Box::new(Sphere::new(Point3::new(0., 0., -1.), 0.5)));
+    world.add(Box::new(Sphere::new(Point3::new(0., -100.5, -1.), 100.)));
 
     //Camera
 
@@ -69,7 +81,7 @@ fn write_image() -> Result<(), Box<dyn Error>> {
 
             let r = Ray::new(camera_centre, ray_direction);
 
-            let pixel_color = ray_color(r);
+            let pixel_color = ray_color(&r, &world);
 
             let color = color::write_color(pixel_color);
 
@@ -86,26 +98,14 @@ fn write_image() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn hit_sphere(centre: &Point3, radius: f64, r: &Ray) -> f64 {
-    let oc = centre - &r.origin();
-    let a = r.direction().length_squared();
-    let h = r.direction().dot(&oc);
-    let c = oc.length_squared() - radius * radius;
-    let discriminant = h * h - a * c;
-    if discriminant < 0. {
-        return -1.;
-    }
+fn ray_color(r: &Ray, world: &HittableList) -> Color {
+    let mut rec = HitRecord::default();
 
-    h - discriminant.sqrt() / a
-}
-
-fn ray_color(r: Ray) -> Color {
-    let t = hit_sphere(&Point3::new(0., 0., -1.), 0.5, &r);
-
-    if t > 0. {
-        let n = (r.at(t) - Vec3::new(0., 0., -1.)).unit_vector();
-
-        return 0.5 * Color::new(n.x() + 1., n.y() + 1., n.z() + 1.);
+    // let t = hit_sphere(&Point3::new(0., 0., -1.), 0.5, &r);
+    if world.hit(r, Interval::new(0., f64::INFINITY), &mut rec) {
+        // println!("{:?}", rec.normal);
+        //TODO: figure out why this hit isnt modifying the valus of normal away from default
+        return 0.5 * (rec.normal + Color::new(1.0, 1.0, 1.0));
     }
 
     let unit_direction = r.direction().unit_vector();

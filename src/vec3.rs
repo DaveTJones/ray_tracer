@@ -41,7 +41,7 @@ impl Vec3 {
         self.length_squared().sqrt()
     }
 
-    pub fn unit_vector(&self) -> Vec3 {
+    pub fn to_unit_vector(&self) -> Vec3 {
         self / self.length()
     }
 }

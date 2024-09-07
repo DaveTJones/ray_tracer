@@ -1,3 +1,4 @@
+use rand::distributions::{Distribution, Uniform};
 use std::ops;
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Vec3 {
@@ -37,12 +38,48 @@ impl Vec3 {
         self.dot(&self)
     }
 
+    pub fn random() -> Self {
+        let (x, y, z) = rand::random();
+        Self::new(x, y, z)
+    }
+    pub fn random_in_range(min: f64, max: f64) -> Self {
+        let mut rng = rand::thread_rng();
+        let range = Uniform::from(min..max);
+        Self::new(
+            range.sample(&mut rng),
+            range.sample(&mut rng),
+            range.sample(&mut rng),
+        )
+    }
+
     pub fn length(&self) -> f64 {
         self.length_squared().sqrt()
     }
 
     pub fn to_unit_vector(&self) -> Vec3 {
         self / self.length()
+    }
+
+    pub fn random_in_unit_sphere() -> Self {
+        loop {
+            let p = Self::random();
+            if p.length_squared() < 1. {
+                return p;
+            }
+        }
+    }
+
+    pub fn random_unit_vector() -> Self {
+        Self::random().to_unit_vector()
+    }
+
+    pub fn random_on_hemisphere(normal: &Self) -> Self {
+        let on_unit_sphere = Self::random_in_range(-1., 1.).to_unit_vector();
+        if on_unit_sphere.dot(&normal) < 0. {
+            return -on_unit_sphere;
+        } else {
+            return on_unit_sphere;
+        };
     }
 }
 

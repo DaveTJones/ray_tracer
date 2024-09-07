@@ -20,12 +20,17 @@ impl Interval {
         self.min < x && x < self.max
     }
 
-    const EMPTY: Self = Interval {
+    pub fn clamp(&self, x: f64) -> f64 {
+        //TODO: this panics if min is greater than max. Find a safe fallback behaviour.
+        x.clamp(self.min, self.max)
+    }
+
+    const EMPTY: Self = Self {
         min: f64::INFINITY,
         max: f64::NEG_INFINITY,
     };
 
-    const UNIVERSE: Self = Interval {
+    const UNIVERSE: Self = Self {
         min: f64::NEG_INFINITY,
         max: f64::INFINITY,
     };

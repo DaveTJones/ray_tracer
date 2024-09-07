@@ -5,7 +5,6 @@ use crate::{
 };
 
 #[derive(Clone, Copy, Default, Debug)]
-// #[derive(Default)]
 pub struct HitRecord {
     pub p: Point3,
     pub normal: Vec3,

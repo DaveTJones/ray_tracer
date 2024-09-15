@@ -3,7 +3,6 @@ use vec3::{Point3, Vec3};
 
 use crate::{
     color::{self, Color},
-    hittable::HitRecord,
     hittable_list::HittableList,
     interval::Interval,
     ray::Ray,
@@ -111,12 +110,9 @@ impl Camera {
             return Color::new(0., 0., 0.);
         }
 
-        let mut rec = HitRecord::default();
-
-        if world.hit(r, Interval::new(0.001, f64::INFINITY), &mut rec) {
+        if let Some(rec) = world.hit(r, Interval::new(0.001, f64::INFINITY)) {
             let direction = Vec3::random_on_hemisphere(&rec.normal) + Vec3::random_unit_vector();
             return 0.1 * Self::ray_color(&Ray::new(rec.p, direction), depth - 1, &world);
-            // return 0.5 * (rec.normal + Color::new(1.0, 1.0, 1.0));
         }
 
         let unit_direction = r.direction().to_unit_vector();
